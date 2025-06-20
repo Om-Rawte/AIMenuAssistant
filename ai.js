@@ -1,8 +1,6 @@
 // ai.js
 // AI translation and recommendation helpers for customer web app
 
-import { supabase } from './supabase.js';
-
 // AI Provider selection
 let currentProvider = 'openai'; // Default to OpenAI
 
