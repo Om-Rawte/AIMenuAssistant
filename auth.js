@@ -16,7 +16,7 @@ export function clearSession(key) {
 
 // Handle email verification (for email-verification.html)
 export async function handleEmailVerification() {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const params = new URLSearchParams(window.location.search);
   const accessToken = params.get('access_token');
   const type = params.get('type');
@@ -36,7 +36,7 @@ export async function handleEmailVerification() {
 
 // Handle password reset (for reset-password.html)
 export async function handlePasswordReset() {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const params = new URLSearchParams(window.location.search);
   const accessToken = params.get('access_token');
   const form = document.getElementById('reset-password-form');

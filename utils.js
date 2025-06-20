@@ -71,7 +71,7 @@ export function getQRSessionData() {
 
 // Validate reservation name against Supabase
 export async function validateReservationName(reservationId, name) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('reservations').select('customer_name').eq('id', reservationId).single();
   if (error) throw error;
   return data && data.customer_name && data.customer_name.toLowerCase().trim() === name.toLowerCase().trim();

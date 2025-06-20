@@ -6,57 +6,70 @@ const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || import.meta.env.VITE_SUPAB
 
 let supabase = null;
 
-export function initSupabase() {
-  if (!supabase && window.supabase) {
+async function getSupabaseClient() {
+  if (supabase) return supabase;
+  if (typeof window !== 'undefined' && window.supabase) {
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return supabase;
   }
-  return supabase;
+  // Try dynamic import (ESM)
+  try {
+    const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm');
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return supabase;
+  } catch (e) {
+    throw new Error('Supabase client could not be loaded.');
+  }
+}
+
+export async function initSupabase() {
+  return await getSupabaseClient();
 }
 
 export async function fetchMenu() {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('menu_items').select('*').order('category', { ascending: true });
   if (error) throw error;
   return data;
 }
 
 export async function fetchTable(tableId) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('tables').select('*').eq('id', tableId).single();
   if (error) throw error;
   return data;
 }
 
 export async function addOrder(order) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('orders').insert([order]).select();
   if (error) throw error;
   return data[0];
 }
 
 export async function addOrderItems(items) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('order_items').insert(items).select();
   if (error) throw error;
   return data;
 }
 
 export async function fetchOrderStatus(orderId) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('order_items').select('*').eq('order_id', orderId);
   if (error) throw error;
   return data;
 }
 
 export async function addFeedback(feedback) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('feedback').insert([feedback]).select();
   if (error) throw error;
   return data[0];
 }
 
-export function subscribeToOrderItems(orderId, callback) {
-  const sb = initSupabase();
+export async function subscribeToOrderItems(orderId, callback) {
+  const sb = await initSupabase();
   return sb.channel('order_items')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'order_items', filter: `order_id=eq.${orderId}` }, payload => {
       callback(payload);
@@ -64,8 +77,8 @@ export function subscribeToOrderItems(orderId, callback) {
     .subscribe();
 }
 
-export function subscribeToMenu(callback) {
-  const sb = initSupabase();
+export async function subscribeToMenu(callback) {
+  const sb = await initSupabase();
   return sb.channel('menu_items')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, payload => {
       callback(payload);
@@ -76,7 +89,7 @@ export function subscribeToMenu(callback) {
 // --- Group Cart/Consensus Logic ---
 // Upsert (insert or update) a user's cart/confirmation for a table
 export async function upsertOrderConfirmation(tableId, userId, cart, confirmed) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('order_confirmations').upsert([
     {
       table_id: tableId,
@@ -92,15 +105,15 @@ export async function upsertOrderConfirmation(tableId, userId, cart, confirmed) 
 
 // Fetch all order confirmations for a table
 export async function fetchOrderConfirmations(tableId) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { data, error } = await sb.from('order_confirmations').select('*').eq('table_id', tableId);
   if (error) throw error;
   return data;
 }
 
 // Subscribe to real-time changes for a table's order confirmations
-export function subscribeToOrderConfirmations(tableId, callback) {
-  const sb = initSupabase();
+export async function subscribeToOrderConfirmations(tableId, callback) {
+  const sb = await initSupabase();
   return sb.channel('order_confirmations')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'order_confirmations', filter: `table_id=eq.${tableId}` }, payload => {
       callback(payload);
@@ -110,7 +123,7 @@ export function subscribeToOrderConfirmations(tableId, callback) {
 
 // Clear a user's order confirmation after order placement
 export async function clearOrderConfirmation(tableId, userId) {
-  const sb = initSupabase();
+  const sb = await initSupabase();
   const { error } = await sb.from('order_confirmations').delete().eq('table_id', tableId).eq('user_id', userId);
   if (error) throw error;
 } 
