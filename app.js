@@ -145,9 +145,13 @@ async function updateAIAssistant() {
   const context = JSON.stringify({ menu: menuData, cart, time: new Date().toLocaleString() });
   try {
     const recs = await getAIRecommendations(context, currentLanguage);
-    aiDiv.textContent = recs;
-  } catch {
-    aiDiv.textContent = 'AI recommendations unavailable.';
+    if (!recs || recs.toLowerCase().includes('unavailable') || recs.toLowerCase().includes('api key')) {
+      aiDiv.innerHTML = '<span class="text-danger">AI features are currently unavailable. Please contact the restaurant or try again later.</span>';
+    } else {
+      aiDiv.textContent = recs;
+    }
+  } catch (e) {
+    aiDiv.innerHTML = '<span class="text-danger">AI features are currently unavailable. Please contact the restaurant or try again later.</span>';
   }
 }
 
@@ -450,7 +454,6 @@ function setupAIChatbot() {
 
     if (!chatbotToggle || !chatbotWindow || !chatbotClose || !chatbotInput || !chatbotSend) return;
 
-    // Hide cart and show chatbot
     chatbotToggle.addEventListener('click', () => {
         const cartModal = document.getElementById('cart-modal');
         if (cartModal && cartModal.classList.contains('visible')) {
@@ -461,13 +464,11 @@ function setupAIChatbot() {
         addMessageToChat('assistant', 'Hello! How can I help you with the menu today?');
     });
 
-    // Close chatbot
     chatbotClose.addEventListener('click', () => {
         chatbotWindow.classList.remove('visible');
         chatbotToggle.style.display = 'flex';
     });
 
-    // Send message
     chatbotSend.addEventListener('click', handleSendMessage);
     chatbotInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -481,21 +482,20 @@ function setupAIChatbot() {
 
         addMessageToChat('user', message);
         chatbotInput.value = '';
-        
         addTypingIndicator();
-
         try {
             const context = JSON.stringify({ menu: menuData, user_query: message });
             const language = currentLanguage || 'en';
-            
-            // This is a new function we will add to ai.js
             const response = await getAIChatResponse(context, language);
-            
             removeTypingIndicator();
-            addMessageToChat('assistant', response);
+            if (!response || response.toLowerCase().includes('unavailable') || response.toLowerCase().includes('api key')) {
+              addMessageToChat('assistant', "AI assistant is currently unavailable. Please contact the restaurant or try again later.");
+            } else {
+              addMessageToChat('assistant', response);
+            }
         } catch (error) {
             removeTypingIndicator();
-            addMessageToChat('assistant', "Sorry, I'm having a little trouble thinking right now. Please try again in a moment.");
+            addMessageToChat('assistant', "AI assistant is currently unavailable. Please contact the restaurant or try again later.");
             console.error("Chatbot error:", error);
         }
     }
