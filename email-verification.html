@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Email Verification - AI Assistant Menu</title>
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    const theme = localStorage.getItem('theme');
+    if (theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    }
+  </script>
+</head>
+<body>
+  <div class="centered-container">
+    <div class="centered-box">
+      <img src="logo/Light.png" alt="Logo" class="logo logo-light" style="height: 50px; margin-bottom: 1rem;">
+      <img src="logo/Dark.png" alt="Logo" class="logo logo-dark" style="height: 50px; margin-bottom: 1rem;">
+      <h1>Verify Your Email</h1>
+      <p>Thank you for signing up! A verification link has been sent to your email address. Please check your inbox and click the link to complete your registration.</p>
+      <div id="verification-message"></div>
+      <a href="index.html" class="button" style="margin-top: 1rem;">Back to Home</a>
+    </div>
+  </div>
+</body>
+</html> 
